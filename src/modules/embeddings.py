@@ -1,0 +1,52 @@
+from typing import List
+
+import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from tqdm.auto import tqdm
+
+from .base import Module
+
+
+class EmbeddingModule(Module):
+
+    default_threshold = 0.7
+    thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
+
+    def __init__(self, model_name: str = "deepvk/USER-bge-m3",
+                 batch_size: int = 8, max_length: int = 8192):
+        self.model_name = model_name
+        self.batch_size = batch_size
+        self.max_length = max_length
+        self.model = None
+
+    def _load_model(self):
+        if self.model is None:
+            self.model = SentenceTransformer(self.model_name)
+
+    def _embed_texts(self, texts: List[str]) -> np.ndarray:
+        embeddings = []
+        with torch.no_grad():
+            for i in tqdm(range(0, len(texts), self.batch_size), desc="Embedding"):
+                batch = texts[i:i + self.batch_size]
+                emb = self.model.encode(
+                    batch,
+                    convert_to_tensor=False,
+                    normalize_embeddings=True,
+                    show_progress_bar=False
+                )
+                embeddings.append(emb)
+                if (i // self.batch_size) % 10 == 0:
+                    torch.cuda.empty_cache()
+        return np.vstack(embeddings)
+
+    def get_logits(self, X: List[str]) -> np.ndarray:
+        self._load_model()
+        truncated = [t[:self.max_length] for t in X]
+        embeddings = self._embed_texts(truncated)
+        matrix = cosine_similarity(embeddings).astype(np.float32)
+        return matrix
+
+    def __repr__(self):
+        return f"EmbeddingModule(model={self.model_name})"
