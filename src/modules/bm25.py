@@ -10,7 +10,7 @@ from .base import Module
 
 class BM25Module(Module):
 
-    default_threshold = 0.3
+    default_threshold = 0.5
     thresholds = [0.1, 0.2, 0.3, 0.4, 0.5]
 
     def __init__(self):

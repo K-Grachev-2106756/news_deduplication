@@ -9,7 +9,7 @@ from .base import Module
 
 class NERModule(Module):
 
-    default_threshold = 0.3
+    default_threshold = 0.4
     thresholds = [0.1, 0.2, 0.3, 0.4, 0.5]
 
     def __init__(self, model_name: str = "ru_core_news_lg",
