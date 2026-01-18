@@ -27,7 +27,8 @@ class NERModule(Module):
         entities = set()
         for ent in doc.ents:
             if ent.label_ in self.entity_types:
-                normalized = ent.text.lower().strip()
+                lemmas = [token.lemma_.lower() for token in ent]
+                normalized = " ".join(lemmas).strip()
                 if normalized:
                     entities.add(normalized)
         return entities

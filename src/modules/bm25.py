@@ -4,6 +4,7 @@ import numpy as np
 import bm25s
 import pymorphy3
 from tqdm.auto import tqdm
+import re
 
 from .base import Module
 
@@ -17,7 +18,8 @@ class BM25Module(Module):
         self.morph = pymorphy3.MorphAnalyzer()
 
     def _lemmatize(self, text: str) -> List[str]:
-        tokens = text.lower().split()
+        text = re.sub(r'[^\w\s]', ' ', text.lower())
+        tokens = text.split()
         return [self.morph.parse(token)[0].normal_form for token in tokens]
 
     def get_logits(self, X: List[str]) -> np.ndarray:
