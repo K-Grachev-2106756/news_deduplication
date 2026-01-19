@@ -26,7 +26,7 @@ class Pipeline:
 
     @staticmethod
     def __validate(y_true: np.ndarray, y_pred: np.ndarray):
-        mask = ~np.isnan(y_true)
+        mask = ~np.isnan(y_true) & np.triu(np.ones_like(y_true, dtype=bool), k=1)
         y_true_bin = np.zeros_like(y_pred, dtype=np.int8)
         y_true_bin[mask] = y_true[mask].astype(np.int8)
 
