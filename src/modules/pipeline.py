@@ -1,32 +1,18 @@
+import os
 import json
 from itertools import product
 
 import numpy as np
 
-
-class Module:
-
-    def __init__(self):
-        pass
-
-    def get_logits(self, X) -> np.array:
-        return np.ones_like(X)
-    
-    def predict(self, X, threshold=None) -> np.array:
-        if threshold is None:
-            threshold = self.default_threshold
-        
-        logits = self.get_logits(X)
-
-        return (logits > threshold).astype(int)
+from .base import Module
 
 
 class Pipeline:
 
     def __init__(self, module_list: list[Module]):
         # Инициализация модулей
-        self.modules = [module() for module in module_list]
-        self.best_params = [None] * len(self.modules)
+        self.modules = module_list
+        self.best_params = [None] * len(module_list)
         self.fit_logs = []
     
 
@@ -40,7 +26,7 @@ class Pipeline:
 
     @staticmethod
     def __validate(y_true: np.ndarray, y_pred: np.ndarray):
-        mask = y_true != None
+        mask = ~np.isnan(y_true)
         y_true_bin = np.zeros_like(y_pred, dtype=np.int8)
         y_true_bin[mask] = y_true[mask].astype(np.int8)
 
@@ -57,7 +43,7 @@ class Pipeline:
         thresholds = [module.thresholds for module in self.modules]
         all_logits = [[module.get_logits(x) for module in self.modules] for x in X]  # Собираем логиты один раз сразу
         best_score = 0.
-        for params_comb in product(thresholds):
+        for params_comb in product(*thresholds):
             
             TP = FN = FP = TN = 0
             for x_logits, y_true in zip(all_logits, y):
@@ -92,6 +78,8 @@ class Pipeline:
 
 
     def save(self, output_path: str, model_name: str = "model"):
+        os.makedirs(output_path, exist_ok=True)
+        
         with open(f"{output_path}/{model_name}.json", "w", encoding="utf-8") as f:
             json.dump({
                 "modules": [str(module) for module in self.modules], 

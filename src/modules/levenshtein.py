@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from Levenshtein import distance as lev_distance
@@ -10,16 +10,21 @@ from .base import Module
 class LevenshteinModule(Module):
 
     default_threshold = 0.5
-    thresholds = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    thresholds = np.round(np.arange(0.1, 0.9, step=0.025), 3).tolist()
 
     def __init__(self, use_quick_filter: bool = True):
         self.use_quick_filter = use_quick_filter
 
-    def _similarity(self, text1: str, text2: str) -> float:
+    def _similarity(self, text1: str, text2: str, truncation: Optional[int] = None) -> float:
+        if truncation:
+            text1, text2 = text1[:truncation], text2[:truncation]
+        text1, text2 = text1.lower(), text2.lower()
+
         max_len = max(len(text1), len(text2))
         if max_len == 0:
             return 0.0
         dist = lev_distance(text1, text2) / max_len
+        
         return 1.0 - dist
 
     def get_logits(self, X: List[str]) -> np.ndarray:
@@ -30,13 +35,12 @@ class LevenshteinModule(Module):
         for i in tqdm(range(k), desc="Levenshtein"):
             for j in range(i + 1, k):
                 if self.use_quick_filter:
-                    len_ratio = min(lengths[i], lengths[j]) / max(lengths[i], lengths[j]) if max(lengths[i], lengths[j]) > 0 else 0
+                    min_len, max_len = min(lengths[i], lengths[j]), max(lengths[i], lengths[j])
+                    len_ratio = min_len / max_len if max_len else 0
                     if len_ratio < 0.5:
-                        continue
-
-                    quick_dist = lev_distance(X[i][:100].lower(), X[j][:100].lower()) / 100
-                    if quick_dist > 0.7:
-                        continue
+                        quick_sim = self._similarity(X[i], X[j], truncation=100)
+                        if quick_sim < 0.3:
+                            continue
 
                 sim = self._similarity(X[i], X[j])
                 matrix[i, j] = sim

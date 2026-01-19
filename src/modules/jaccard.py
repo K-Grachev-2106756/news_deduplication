@@ -10,8 +10,8 @@ from .base import Module
 class JaccardModule(Module):
 
     default_threshold = 0.4
-    thresholds = [0.1, 0.2, 0.3, 0.4, 0.5]
-
+    thresholds = np.round(np.arange(0.025, 0.6, step=0.025), 3).tolist()
+    
     def __init__(self, n: int = 3, lowercase: bool = True):
         self.n = n
         self.lowercase = lowercase

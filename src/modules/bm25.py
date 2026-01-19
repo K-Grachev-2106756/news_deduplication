@@ -12,7 +12,7 @@ from .base import Module
 class BM25Module(Module):
 
     default_threshold = 0.5
-    thresholds = [0.1, 0.2, 0.3, 0.4, 0.5]
+    thresholds = np.round(np.arange(0.025, 0.7, step=0.025), 3).tolist()
 
     def __init__(self):
         self.morph = pymorphy3.MorphAnalyzer()
@@ -35,13 +35,11 @@ class BM25Module(Module):
             scores = retriever.get_scores(corpus[i])
             matrix[i, :] = scores
 
-        matrix = (matrix + matrix.T) / 2
-
         max_score = matrix.max()
         if max_score > 0:
-            matrix = matrix / max_score
+            matrix = matrix / matrix.max(axis=1)  # bm25 несимметрична, нормализуем по строкам
+            matrix = np.maximum(matrix, matrix.T)  # В контексте задачи нам неважно i похож на j или j на i
 
-        np.fill_diagonal(matrix, 1.0)
         return matrix
 
     def __repr__(self):
