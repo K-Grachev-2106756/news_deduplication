@@ -4,10 +4,10 @@ from typing import List, Set
 import numpy as np
 from tqdm.auto import tqdm
 
-from .base import Module
+from .base import SparseModule
 
 
-class JaccardModule(Module):
+class JaccardModule(SparseModule):
 
     default_threshold = 0.4
     thresholds = np.round(np.arange(0.025, 0.6, step=0.05), 3).tolist()

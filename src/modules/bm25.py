@@ -6,10 +6,10 @@ import pymorphy3
 from tqdm.auto import tqdm
 import re
 
-from .base import Module
+from .base import SparseModule
 
 
-class BM25Module(Module):
+class BM25Module(SparseModule):
 
     default_threshold = 0.5
     thresholds = np.round(np.arange(0.025, 0.7, step=0.05), 3).tolist()

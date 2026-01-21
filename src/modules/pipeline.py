@@ -4,16 +4,26 @@ from itertools import product
 
 import numpy as np
 
-from .base import Module
+from .base import SparseModule, DenseModule
 
 
 class Pipeline:
 
-    def __init__(self, module_list: list[Module]):
-        # Инициализация модулей
+    def __init__(self, module_list: list[SparseModule]):
         self.modules = module_list
         self.best_params = [None] * len(module_list)
         self.fit_logs = []
+
+    def _extract_pairs(self, X: list[str], y: np.ndarray):
+        pairs = []
+        labels = []
+        n = len(X)
+        for i in range(n):
+            for j in range(i + 1, n):
+                if not np.isnan(y[i, j]):
+                    pairs.append((X[i], X[j]))
+                    labels.append(int(y[i, j]))
+        return pairs, labels
     
 
     def predict(self, X: list[str]):
@@ -60,6 +70,18 @@ class Pipeline:
     
 
     def fit(self, X, y):
+        # Обучение dense модулей
+        all_pairs = []
+        all_labels = []
+        for x_batch, y_batch in zip(X, y):
+            pairs, labels = self._extract_pairs(x_batch, y_batch)
+            all_pairs.extend(pairs)
+            all_labels.extend(labels)
+
+        for module in self.modules:
+            if isinstance(module, DenseModule) and not module.is_fitted():
+                module.fit(all_pairs, all_labels)
+
         # Grid Search
         all_logits = [[module.get_logits(x) for module in self.modules] for x in X]  # Собираем логиты один раз сразу
         

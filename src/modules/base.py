@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
 
-class Module(ABC):
+class SparseModule(ABC):
 
     default_threshold: float = 0.5
     thresholds: List[float] = np.round(np.arange(0.025, 1, step=0.025), 3).tolist()
@@ -20,5 +20,15 @@ class Module(ABC):
         return (logits > threshold).astype(int)
 
     @classmethod
-    def set_thresholds(cls, start: float, end: float, step: float=0.025):
-        cls.tr = np.round(np.arange(start, end, step=step), 3).tolist()
+    def set_thresholds(cls, start: float, end: float, step: float = 0.025):
+        cls.thresholds = np.round(np.arange(start, end, step=step), 3).tolist()
+
+
+class DenseModule(SparseModule):
+
+    @abstractmethod
+    def fit(self, X_pairs: List[Tuple[str, str]], y: List[int]) -> None:
+        pass
+
+    def is_fitted(self) -> bool:
+        return getattr(self, '_fitted', False)

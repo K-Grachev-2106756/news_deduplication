@@ -4,10 +4,10 @@ import numpy as np
 from Levenshtein import distance as lev_distance
 from tqdm.auto import tqdm
 
-from .base import Module
+from .base import SparseModule
 
 
-class LevenshteinModule(Module):
+class LevenshteinModule(SparseModule):
 
     default_threshold = 0.5
     thresholds = np.round(np.arange(0.1, 0.7, step=0.05), 3).tolist()
