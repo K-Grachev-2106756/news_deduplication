@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 daily_texts.add(row["text_1"])
                 daily_texts.add(row["text_2"])
             
-            daily_texts = list(daily_texts)
+            daily_texts = sorted(list(daily_texts))  # Для воспроизводимости последовательностей!!! 
             x.append(daily_texts)
             k = len(daily_texts)
 
