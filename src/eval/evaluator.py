@@ -3,7 +3,6 @@ import sys
 sys.path.append(os.getcwd())
 
 import json
-from pathlib import Path
 import random
 from itertools import product
 
@@ -15,6 +14,7 @@ from src.modules.embeddings import EmbeddingModule
 from src.modules.jaccard import JaccardModule
 from src.modules.levenshtein import  LevenshteinModule
 from src.modules.ner import NERModule
+from src.process_data.utils import load_daily_data
 
 
 class Evaluator:
@@ -80,61 +80,7 @@ class Evaluator:
 
 
 
-if __name__ == "__main__":
-
-    def read_jsonl(path):
-        with open(path, "r", encoding="utf-8") as f:
-            for line in f:
-                yield json.loads(line)
-
-
-    def load_daily_data(texts_dir, labels_dir):
-        texts_dir = Path(texts_dir)
-        labels_dir = Path(labels_dir)
-
-        x, y = [], []  # list[list[str]], list[np.ndarray]
-        
-        # предполагаем 1к1 соответствие по имени файла
-        for text_file in sorted(texts_dir.glob("*.jsonl")):
-            label_file = labels_dir / text_file.name
-            if not label_file.exists():
-                print(f"No matching label file for {text_file.name}")
-                continue
-            
-            # ---------- texts ----------
-            objs, daily_texts = [], set()
-            for row in read_jsonl(label_file):
-                objs.append(row)
-                daily_texts.add(row["text_1"])
-                daily_texts.add(row["text_2"])
-            
-            daily_texts = sorted(list(daily_texts))  # Для воспроизводимости последовательностей!!! 
-            x.append(daily_texts)
-            k = len(daily_texts)
-
-            # индекс текста → позиция в матрице
-            text_to_idx = {text: i for i, text in enumerate(daily_texts)}
-
-            # ---------- labels ----------
-            mat = np.full((k, k), np.nan, dtype=float)
-            for row in objs:
-                t1 = row["text_1"]
-                t2 = row["text_2"]
-                ans = row["answer"]
-
-                if t1 not in text_to_idx or t2 not in text_to_idx:
-                    # если вдруг встретилась разметка для текста,
-                    # которого нет в texts этого дня
-                    continue
-
-                i, j = text_to_idx[t1], text_to_idx[t2]
-                mat[i, j] = ans
-                mat[j, i] = ans
-
-            y.append(mat)
-
-        return x, y
-    
+if __name__ == "__main__":    
 
     # Загрузка данных
     x, y = load_daily_data(texts_dir="./dataset/dates", labels_dir="./dataset/responses")
