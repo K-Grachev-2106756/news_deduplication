@@ -11,6 +11,7 @@ class JaccardModule(SparseModule):
 
     default_threshold = 0.4
     thresholds = np.round(np.arange(0.025, 0.6, step=0.05), 3).tolist()
+    short_name = "Jaccard"
     
     def __init__(self, n: int = 3, lowercase: bool = True):
         self.n = n

@@ -15,6 +15,7 @@ class EmbeddingModule(DenseModule):
 
     default_threshold = 0.7
     thresholds = np.round(np.arange(0.4, 1., step=0.05), 3).tolist()
+    short_name = "Embedding"
 
     def __init__(
             self, 

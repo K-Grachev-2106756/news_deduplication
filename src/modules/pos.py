@@ -12,6 +12,7 @@ class POSModule(SparseModule):
 
     default_threshold = 0.4
     thresholds = np.round(np.arange(0.1, 0.7, step=0.05), 3).tolist()
+    short_name = "POS"
 
     VALID_POS = {"NOUN", "PROPN", "VERB"}
 

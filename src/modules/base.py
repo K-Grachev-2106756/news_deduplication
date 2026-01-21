@@ -8,6 +8,7 @@ class SparseModule(ABC):
 
     default_threshold: float = 0.5
     thresholds: List[float] = np.round(np.arange(0.025, 1, step=0.025), 3).tolist()
+    short_name = "Sparse"
 
     @abstractmethod
     def get_logits(self, X: List[str]) -> np.ndarray:
@@ -25,6 +26,8 @@ class SparseModule(ABC):
 
 
 class DenseModule(SparseModule):
+
+    short_name = "Dense"
 
     @abstractmethod
     def fit(self, X_pairs: List[Tuple[str, str]], y: List[int]) -> None:

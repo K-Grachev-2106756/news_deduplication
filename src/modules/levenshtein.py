@@ -11,6 +11,7 @@ class LevenshteinModule(SparseModule):
 
     default_threshold = 0.5
     thresholds = np.round(np.arange(0.1, 0.7, step=0.05), 3).tolist()
+    short_name = "Levenshtein"
 
     def __init__(self, use_quick_filter: bool = True):
         self.use_quick_filter = use_quick_filter
