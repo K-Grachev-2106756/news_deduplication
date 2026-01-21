@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "news-deduplication"
+version = "0.1.0"
+description = "News deduplication using dense and sparse methods"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Deep Learning
+    "torch",
+    "sentence-transformers",
+
+    # NLP
+    "spacy",
+    "pymorphy3",
+    "bm25s",
+    "python-Levenshtein",
+
+    # Data Processing
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "python-dateutil",
+    "pydantic",
+
+    # Visualization
+    "matplotlib",
+
+    # Utilities
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyter",
+    "ipykernel",
+]
+data-processing = [
+    "ollama",
+    "requests",
+    "beautifulsoup4",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "dw*"]

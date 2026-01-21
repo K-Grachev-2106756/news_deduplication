@@ -210,3 +210,4 @@ embeddings_bge_m3.npy
 top_duplicates*
 data_source/lemmatized_texts.csv
 runs.ipynb
+dw/
