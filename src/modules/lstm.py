@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple, Optional
 from collections import Counter
 
@@ -69,7 +70,7 @@ class PairDataset(Dataset):
 class LSTMModule(DenseModule):
 
     default_threshold = 0.5
-    thresholds = np.round(np.arange(0.3, 0.8, step=0.025), 3).tolist()
+    thresholds = np.round(np.arange(0.3, 0.8, step=0.05), 3).tolist()
 
     def __init__(self, hidden_size: int = 128, embed_dim: int = 128,
                  max_length: int = 256, epochs: int = 10, batch_size: int = 32,
@@ -154,6 +155,37 @@ class LSTMModule(DenseModule):
 
         np.fill_diagonal(matrix, 1.0)
         return matrix
+    
+    def save(self, output_folder: str, model_name: str = "lstm"):
+        torch.save({
+            "word2idx": self.word2idx,
+            "max_length": self.max_length,
+            "embed_dim": self.embed_dim,
+            "hidden_size": self.hidden_size,
+            "model_state": self.model.state_dict(),
+        }, os.path.join(output_folder, f"{model_name}.pt"))
+
+    def load(self, checkpoint_path: str):
+        checkpoint = torch.load(
+            checkpoint_path,
+            map_location=self.device,
+        )
+
+        self.word2idx = checkpoint["word2idx"]
+        self.max_length = checkpoint["max_length"]
+        self.embed_dim = checkpoint["embed_dim"]
+        self.hidden_size = checkpoint["hidden_size"]
+
+        self.model = SiameseLSTM(
+            vocab_size=len(self.word2idx),
+            embed_dim=self.embed_dim,
+            hidden_size=self.hidden_size,
+        ).to(self.device)
+
+        self.model.load_state_dict(checkpoint["model_state"])
+        self.model.eval()
+
+        self._fitted = True
 
     def __repr__(self):
         return f"LSTMModule(hidden_size={self.hidden_size})"
