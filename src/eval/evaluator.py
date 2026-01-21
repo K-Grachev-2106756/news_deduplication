@@ -8,12 +8,14 @@ from itertools import product
 
 import numpy as np
 
-from src.modules.pipeline import Pipeline
+from src.modules.pipeline import Pipeline, PipelineMean
 from src.modules.bm25 import BM25Module
 from src.modules.embeddings import EmbeddingModule
 from src.modules.jaccard import JaccardModule
 from src.modules.levenshtein import  LevenshteinModule
 from src.modules.ner import NERModule
+from src.modules.pos import POSModule
+from src.modules.lstm import LSTMModule
 from src.process_data.utils import load_daily_data
 
 
@@ -95,29 +97,35 @@ if __name__ == "__main__":
     val_x, val_y = [x[i] for i in val_ids], [y[i] for i in val_ids]
 
     # Инициализация модулей
-    modules = [
+    
+    ## Dense
+    lstm = LSTMModule()
+    lstm.load("./checkpoints/lstm.pt")
+    emb = EmbeddingModule("DeepPavlov/distilrubert-tiny-cased-conversational")
+    emb.load("./checkpoints/trf")
+    dense_modules = [lstm, emb]
+    
+    ## Sparse
+    sparse_modules = [
         NERModule(
             model_name="ru_core_news_lg",
             entity_types={"PER", "LOC", "ORG"},
         ), 
+        POSModule(model_name="ru_core_news_lg"),
         LevenshteinModule(use_quick_filter=False), 
         JaccardModule(n=2, lowercase=True), 
-        EmbeddingModule(batch_size=16), 
         BM25Module(),
     ]
 
-    # Перебор всех комбинаций модуль
-    config_combs = list(product(range(2), repeat=len(modules)))
-    for config in config_combs[1:]:
-        model_name = "".join(str(i) for i in config)
+    # Подбор лучших dense + sparse ансамблей
+    config_combs = list(product(dense_modules, sparse_modules))
+    for config in config_combs:
+        model_name = "+".join(module.short_name for module in config)
         print(f"{model_name=}")
 
-        selected_modules = [modules[i] for i, use in enumerate(config) if use]
-        print(f"{selected_modules=}")
-        
-        pipeline = Pipeline(selected_modules)
+        pipeline = PipelineMean(config)
         pipeline.fit(train_x, train_y)
-        pipeline.save("./configs", model_name="".join(str(i) for i in config))
+        pipeline.save("./configs", model_name)
         print(f"{pipeline.fit_logs=}")
 
         eval_log = Evaluator.evaluate(pipeline, val_x, val_y)
@@ -126,3 +134,25 @@ if __name__ == "__main__":
         with open("eval_logs.jsonl", "a", encoding="utf-8") as f:
             eval_log["model"] = model_name
             f.write(json.dumps(eval_log, ensure_ascii=False) + "\n")
+
+    # # Перебор всех комбинаций модулей
+    # modules = dense_modules + sparse_modules
+    # config_combs = list(product(range(2), repeat=len(modules)))
+    # for config in config_combs[1:]:
+    #     model_name = "".join(str(i) for i in config)
+    #     print(f"{model_name=}")
+
+    #     selected_modules = [modules[i] for i, use in enumerate(config) if use]
+    #     print(f"{selected_modules=}")
+        
+    #     pipeline = Pipeline(selected_modules)
+    #     pipeline.fit(train_x, train_y)
+    #     pipeline.save("./configs", model_name)
+    #     print(f"{pipeline.fit_logs=}")
+
+    #     eval_log = Evaluator.evaluate(pipeline, val_x, val_y)
+    #     print(f"{eval_log=}")
+
+    #     with open("eval_logs.jsonl", "a", encoding="utf-8") as f:
+    #         eval_log["model"] = model_name
+    #         f.write(json.dumps(eval_log, ensure_ascii=False) + "\n")

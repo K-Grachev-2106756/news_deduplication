@@ -13,6 +13,7 @@ class BM25Module(SparseModule):
 
     default_threshold = 0.5
     thresholds = np.round(np.arange(0.025, 0.7, step=0.05), 3).tolist()
+    short_name = "BM25"
 
     def __init__(self):
         self.morph = pymorphy3.MorphAnalyzer()

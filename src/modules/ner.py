@@ -11,6 +11,7 @@ class NERModule(SparseModule):
 
     default_threshold = 0.4
     thresholds = np.round(np.arange(0.1, 0.6, step=0.05), 3).tolist()
+    short_name = "NER"
 
     def __init__(self, model_name: str = "ru_core_news_lg",
                  entity_types: Iterable[str] = {"PER", "LOC", "ORG"}):

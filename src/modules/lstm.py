@@ -71,6 +71,7 @@ class LSTMModule(DenseModule):
 
     default_threshold = 0.5
     thresholds = np.round(np.arange(0.3, 0.8, step=0.05), 3).tolist()
+    short_name = "LSTM"
 
     def __init__(self, hidden_size: int = 128, embed_dim: int = 128,
                  max_length: int = 256, epochs: int = 10, batch_size: int = 32,
