@@ -4,10 +4,10 @@ import numpy as np
 import spacy
 from tqdm.auto import tqdm
 
-from .base import Module
+from .base import SparseModule
 
 
-class NERModule(Module):
+class NERModule(SparseModule):
 
     default_threshold = 0.4
     thresholds = np.round(np.arange(0.05, 0.6, step=0.025), 3).tolist()

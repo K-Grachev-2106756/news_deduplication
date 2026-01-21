@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -6,10 +6,10 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
 
-from .base import Module
+from .base import DenseModule
 
 
-class EmbeddingModule(Module):
+class EmbeddingModule(DenseModule):
 
     default_threshold = 0.7
     thresholds = np.round(np.arange(0.4, 1., step=0.025), 3).tolist()
@@ -20,6 +20,10 @@ class EmbeddingModule(Module):
         self.batch_size = batch_size
         self.max_length = max_length
         self.model = None
+        self._fitted = True
+
+    def fit(self, X_pairs: List[Tuple[str, str]], y: List[int]) -> None:
+        pass
 
     def _load_model(self):
         if self.model is None:

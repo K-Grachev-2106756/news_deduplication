@@ -1,6 +1,7 @@
 from src.modules.jaccard import JaccardModule
 from src.modules.levenshtein import LevenshteinModule
 from src.modules.ner import NERModule
+from src.modules.lstm import LSTMModule
 
 texts = [
     'Путин встретился с Трампом в Москве для обсуждения международных вопросов',
@@ -39,5 +40,23 @@ preds = ner.predict(texts)
 print(f'Predictions (threshold={ner.default_threshold}):\n{preds}')
 print()
 
+
+print('Testing LSTMModule...')
+train_pairs = [
+    ('Путин встретился с Трампом', 'Президент России провел переговоры с американским лидером'),
+    ('Погода сегодня солнечная', 'На улице тепло и ясно'),
+    ('Путин в Москве', 'Погода в Питере'),
+    ('Курс доллара вырос', 'Рубль укрепился к евро'),
+]
+train_labels = [1, 1, 0, 0]
+
+lstm = LSTMModule(hidden_size=64, embed_dim=64, max_length=128, epochs=3, batch_size=2)
+lstm.fit(train_pairs, train_labels)
+logits = lstm.get_logits(texts)
+print(f'Logits shape: {logits.shape}')
+print(f'Logits:\n{logits}')
+preds = lstm.predict(texts)
+print(f'Predictions (threshold={lstm.default_threshold}):\n{preds}')
+print()
 
 print('Ok!')
