@@ -38,10 +38,37 @@ class Pipeline:
         return TP, FN, FP, TN
 
 
+    def _prepare_thresholds(self, all_logits):
+        min_thresholds, max_thresholds = [], []
+
+        for module, x_logits in zip(self.modules, all_logits):
+            min_thr = float("-inf")
+            max_thr = float("inf")
+            for logits in x_logits:
+                for thr in module.thresholds:
+                    pred = (logits > thr).astype(int)
+                    s = pred.sum()
+                    if s == 0:
+                        max_thr = min(max_thr, thr)
+                    if s == pred.size:
+                        min_thr = max(min_thr, thr)
+                        
+            min_thresholds.append(min_thr)
+            max_thresholds.append(max_thr)
+
+        return min_thresholds, max_thresholds
+    
+
     def fit(self, X, y):
         # Grid Search
-        thresholds = [module.thresholds for module in self.modules]
         all_logits = [[module.get_logits(x) for module in self.modules] for x in X]  # Собираем логиты один раз сразу
+        
+        min_thresholds, max_thresholds = self._prepare_thresholds(all_logits)
+        thresholds = [
+            [t for t in module.thresholds if min_t < t < max_t]
+            for module, min_t, max_t in zip(self.modules, min_thresholds, max_thresholds)
+        ]  # Сокращаем количество комбинаций порогов
+
         best_score = 0.
         for params_comb in product(*thresholds):
             

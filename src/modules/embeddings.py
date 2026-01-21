@@ -12,7 +12,7 @@ from .base import Module
 class EmbeddingModule(Module):
 
     default_threshold = 0.7
-    thresholds = np.round(np.arange(0.4, 1., step=0.025), 3).tolist()
+    thresholds = np.round(np.arange(0.4, 1., step=0.05), 3).tolist()
 
     def __init__(self, model_name: str = "deepvk/USER-bge-m3",
                  batch_size: int = 8, max_length: int = 8192):

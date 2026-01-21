@@ -100,12 +100,16 @@ if __name__ == "__main__":
             if not label_file.exists():
                 print(f"No matching label file for {text_file.name}")
                 continue
-
+            
             # ---------- texts ----------
-            daily_texts = [row["text"] for row in read_jsonl(text_file)]
-
+            objs, daily_texts = [], set()
+            for row in read_jsonl(label_file):
+                objs.append(row)
+                daily_texts.add(row["text_1"])
+                daily_texts.add(row["text_2"])
+            
+            daily_texts = list(daily_texts)
             x.append(daily_texts)
-
             k = len(daily_texts)
 
             # индекс текста → позиция в матрице
@@ -113,8 +117,7 @@ if __name__ == "__main__":
 
             # ---------- labels ----------
             mat = np.full((k, k), np.nan, dtype=float)
-
-            for row in read_jsonl(label_file):
+            for row in objs:
                 t1 = row["text_1"]
                 t2 = row["text_2"]
                 ans = row["answer"]

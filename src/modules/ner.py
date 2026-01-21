@@ -10,7 +10,7 @@ from .base import Module
 class NERModule(Module):
 
     default_threshold = 0.4
-    thresholds = np.round(np.arange(0.05, 0.6, step=0.025), 3).tolist()
+    thresholds = np.round(np.arange(0.1, 0.6, step=0.05), 3).tolist()
 
     def __init__(self, model_name: str = "ru_core_news_lg",
                  entity_types: Iterable[str] = {"PER", "LOC", "ORG"}):
@@ -22,8 +22,7 @@ class NERModule(Module):
         if self.nlp is None:
             self.nlp = spacy.load(self.model_name)
     
-    def _extract_entities(self, text: str) -> Set[str]:
-        doc = self.nlp(text)
+    def _extract_entities(self, doc: spacy.tokens.Doc) -> Set[str]:
         entities = set()
         for ent in doc.ents:
             if ent.label_ in self.entity_types:
@@ -38,8 +37,16 @@ class NERModule(Module):
 
         k = len(X)
 
-        entities_list = [self._extract_entities(text) for text in tqdm(X, desc="NER: extracting entities")]
+        # ---- NER extraction via pipe ----
+        entities_list = []
+        for doc in tqdm(
+            self.nlp.pipe(X, batch_size=32, n_process=2, disable=["tagger", "parser"]),
+            desc="NER: extracting entities",
+            total=k,
+        ):
+            entities_list.append(self._extract_entities(doc))
 
+        # ---- similarity matrix ----
         matrix = np.zeros((k, k), dtype=np.float32)
         for i in tqdm(range(k), desc="NER: computing similarity"):
             for j in range(i + 1, k):
